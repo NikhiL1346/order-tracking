@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CUSTOMER)
+  orders    Order[]
+}
+
+model Order {
+  id                Int       @id @default(autoincrement())
+  userId            Int
+  status            Status    @default(PLACED)
+  createdAt         DateTime  @default(now())
+  user              User      @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  CUSTOMER
+  DELIVERY_PARTNER
+  ADMIN
+}
+
+enum Status {
+  PLACED
+  ACCEPTED
+  PICKED_UP
+  ON_THE_WAY
+  DELIVERED
+  CANCELLED
+}
