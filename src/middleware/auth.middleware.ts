@@ -1,35 +1,55 @@
-import { Request,Response,NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { Request, Response, NextFunction } from "express";
+import { verifyToken, JwtPayload } from "../helpers/jwt.helper";
 
-interface JwtPayload{
-    userId:number;
-    role:string;
+declare global {
+    namespace Express {
+        interface Request {
+            user?: JwtPayload;
+        }
+    }
 }
 
-export const authMiddleware =(
-    req:Request,
-    res:Response,
-    next:NextFunction
-)=>{
+export const authMiddleware = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     const authHeader = req.headers.authorization;
-    if(!authHeader){
-        return res.status(401).json({message:"No Token Provided!"});
-    }
-    const token =authHeader.split(" ")[1];
 
-    try {
-       const decoded =jwt.verify(
-        token,
-        process.env.JWT_SECRET as string 
-       )  as JwtPayload;
-       
-       req.user ={
-        userId:decoded.userId,
-        role:decoded.role as any,
-       }
-
-       next();
-    } catch (error) {
-         return res.status(401).json({ message: "Invalid token" });
+    if (!authHeader) {
+        return res.status(401).json({
+            success: false,
+            message: "No token provided",
+            errorCode: "UNAUTHORIZED",
+            statusCode: 401,
+            timestamp: new Date().toISOString(),
+        });
     }
-}
+
+    const token = authHeader.split(" ")[1];
+
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            message: "Invalid token format",
+            errorCode: "UNAUTHORIZED",
+            statusCode: 401,
+            timestamp: new Date().toISOString(),
+        });
+    }
+
+    const decoded = verifyToken(token);
+
+    if (!decoded) {
+        return res.status(401).json({
+            success: false,
+            message: "Invalid or expired token",
+            errorCode: "UNAUTHORIZED",
+            statusCode: 401,
+            timestamp: new Date().toISOString(),
+        });
+    }
+
+    req.user = decoded;
+    next();
+};
