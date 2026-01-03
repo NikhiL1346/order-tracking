@@ -1,8 +1,9 @@
+import { Role } from "@prisma/client";
 import jwt from "jsonwebtoken";
 
 export interface JwtPayload {
     userId: number;
-    role: string;
+    role: Role;
 }
 
 export interface TokenResponse {
