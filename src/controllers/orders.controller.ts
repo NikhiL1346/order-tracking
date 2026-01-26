@@ -13,42 +13,62 @@ import {
 
 export const createOrder = async (req: Request, res: Response) => {
     try {
-        if (!req.user) {
-            return res.status(401).json(
-                unauthorizedError("User not authenticated")
-            );
-        }
-
-        // Call service
-        const order = await ordersService.createOrder({
-            userId: req.user.userId,
-        });
-
-        return res.status(201).json(
-            createdResponse(order, "Order created successfully")
+      if (!req.user) {
+        return res.status(401).json(
+          unauthorizedError("User not authenticated")
         );
+      }
+  
+      const { items, shippingAddress, notes } = req.body;
+  
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json(
+          validationErrorResponse({
+            items: ["Order items are required"],
+          })
+        );
+      }
+  
+      if (!shippingAddress) {
+        return res.status(400).json(
+          validationErrorResponse({
+            shippingAddress: ["Shipping address is required"],
+          })
+        );
+      }
+  
+      const order = await ordersService.createOrder({
+        userId: req.user.userId,
+        items,
+        shippingAddress,
+        notes,
+      });
+  
+      return res.status(201).json(
+        createdResponse(order, "Order created successfully")
+      );
     } catch (error) {
-        const errorMessage =
-            error instanceof Error ? error.message : "Failed to create order";
-
-        if (
-            errorMessage.includes("not found") ||
-            errorMessage.includes("required")
-        ) {
-            return res.status(400).json(
-                validationErrorResponse({
-                    general: [errorMessage],
-                })
-            );
-        }
-
-        return res.status(500).json(
-            validationErrorResponse({
-                general: ["Failed to create order"],
-            })
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create order";
+  
+      if (
+        errorMessage.includes("not found") ||
+        errorMessage.includes("required")
+      ) {
+        return res.status(400).json(
+          validationErrorResponse({
+            general: [errorMessage],
+          })
         );
+      }
+  
+      return res.status(500).json(
+        validationErrorResponse({
+          general: ["Failed to create order"],
+        })
+      );
     }
-};
+  };
 
 export const getUserOrders = async (req: Request, res: Response) => {
     try {

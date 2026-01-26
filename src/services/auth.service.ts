@@ -81,7 +81,7 @@ export class AuthService {
         };
     }
 
-    async login(payload: LoginPayload): Promise<AuthResponse> {
+    async login(payload: LoginPayload): Promise<any> {
         // Validate inputs
         if (!validateRequired(payload.email)) {
             throw new Error("Email is required");

@@ -1,5 +1,6 @@
 import { Role } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import { env } from "../config/env.config";  // Add this import
 
 export interface JwtPayload {
     userId: number;
@@ -13,17 +14,17 @@ export interface TokenResponse {
 
 export const generateToken = (
     userId: number,
-    role: string
+    role: Role
 ): TokenResponse => {
     const token = jwt.sign(
-        { userId, role },
-        process.env.JWT_SECRET as string,
-        { expiresIn: "24h" }
+        { userId, role:role as string },
+        env.JWT_SECRET ,
+        { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions
     );
 
     return {
         token,
-        expiresIn: "24h",
+        expiresIn: env.JWT_EXPIRES_IN,  // ✅ Changed from hardcoded "24h"
     };
 };
 
@@ -31,7 +32,7 @@ export const verifyToken = (token: string): JwtPayload | null => {
     try {
         const decoded = jwt.verify(
             token,
-            process.env.JWT_SECRET as string
+            env.JWT_SECRET  // ✅ Changed from process.env.JWT_SECRET
         ) as JwtPayload;
         return decoded;
     } catch (error) {
@@ -48,6 +49,6 @@ export const decodeToken = (token: string): JwtPayload | null => {
     }
 };
 
-export const refreshToken = (userId: number, role: string): TokenResponse => {
+export const refreshToken = (userId: number, role: Role): TokenResponse => {
     return generateToken(userId, role);
 };

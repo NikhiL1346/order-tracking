@@ -7,7 +7,6 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-
 model User {
   id        Int      @id @default(autoincrement())
   name      String
@@ -15,14 +14,44 @@ model User {
   password  String
   role      Role     @default(CUSTOMER)
   orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Order {
-  id                Int       @id @default(autoincrement())
+  id                Int            @id @default(autoincrement())
   userId            Int
-  status            Status    @default(PLACED)
-  createdAt         DateTime  @default(now())
-  user              User      @relation(fields: [userId], references: [id])
+  status            Status         @default(PLACED)
+  totalAmount       Float          @default(0)
+  shippingAddress   String
+  trackingNumber    String?        @unique
+  notes             String?
+  deliveryPartnerId Int?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  user              User           @relation(fields: [userId], references: [id])
+  items             OrderItem[]
+  statusHistory     OrderStatusHistory[]
+}
+
+model OrderItem {
+  id          Int     @id @default(autoincrement())
+  orderId    Int
+  name        String
+  description String?
+  quantity    Int     @default(1)
+  price       Float
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model OrderStatusHistory {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  status    Status
+  notes     String?
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 enum Role {
